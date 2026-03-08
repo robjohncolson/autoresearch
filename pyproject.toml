@@ -20,6 +20,13 @@ torch = [
     { index = "pytorch-xpu" },
 ]
 
+[tool.uv]
+environments = ["sys_platform == 'win32'"]
+override-dependencies = [
+    "pytorch-triton-xpu; sys_platform == 'linux'",
+    "triton-xpu; sys_platform == 'linux'",
+]
+
 [[tool.uv.index]]
 name = "pytorch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
