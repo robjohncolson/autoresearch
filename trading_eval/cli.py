@@ -97,6 +97,42 @@ def cmd_compare(args) -> int:
     return 0
 
 
+def cmd_promote(args) -> int:
+    from trading_eval.artifact import load_artifact, promote_candidate
+
+    record = load_experiment(Path(args.experiment))
+    path = promote_candidate(
+        record,
+        artifact_version=args.artifact_version,
+        artifacts_dir=Path(args.artifacts_dir),
+    )
+    manifest = load_artifact(path)
+    print(f"Promoted: {manifest.artifact_id}")
+    print(f"  Model family: {manifest.model_family}")
+    print(f"  Artifact version: {manifest.artifact_version}")
+    print(f"  Label horizon: {manifest.label_horizon}")
+    print(f"  Input schema: {manifest.input_schema_version}")
+    print(f"  Output schema: {manifest.output_schema_version}")
+    print(f"  Experiment: {manifest.experiment_id}")
+    print(f"  Directory: {path}")
+    return 0
+
+
+def cmd_artifacts(args) -> int:
+    from trading_eval.artifact import list_artifacts
+
+    artifacts = list_artifacts(Path(args.artifacts_dir))
+    if not artifacts:
+        print("No artifacts found.")
+        return 0
+
+    print(f"{'ID':<45} {'Family':<25} {'Horizon':>8} {'Version':>8}")
+    print("-" * 88)
+    for a in artifacts:
+        print(f"{a.artifact_id:<45} {a.model_family:<25} {a.label_horizon:>8} {a.artifact_version:>8}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="trading_eval",
@@ -125,11 +161,24 @@ def main(argv: list[str] | None = None) -> int:
     cmp_p.add_argument("exp_a", type=str, help="Path to first experiment JSON")
     cmp_p.add_argument("exp_b", type=str, help="Path to second experiment JSON")
 
+    # promote
+    promote_p = subparsers.add_parser("promote", help="Promote experiment to artifact")
+    promote_p.add_argument("experiment", type=str, help="Path to experiment JSON")
+    promote_p.add_argument("--artifact-version", default="1.0")
+    promote_p.add_argument("--artifacts-dir", type=str, default="artifacts")
+
+    # artifacts
+    art_p = subparsers.add_parser("artifacts", help="List all artifacts")
+    art_p.add_argument("--artifacts-dir", type=str, default="artifacts")
+
     args = parser.parse_args(argv)
 
     if args.command is None:
         parser.print_help()
         return 1
 
-    handlers = {"run": cmd_run, "list": cmd_list, "compare": cmd_compare}
+    handlers = {
+        "run": cmd_run, "list": cmd_list, "compare": cmd_compare,
+        "promote": cmd_promote, "artifacts": cmd_artifacts,
+    }
     return handlers[args.command](args)
