@@ -102,9 +102,9 @@ class TestLLMCandidate:
         assert c._train_tail is None
 
     def test_inference_metadata(self):
-        c = LLMCandidate(model="qwen3:8b", temperature=0.0, seed=42, context_bars=48)
+        c = LLMCandidate(model="qwen3.5:9b", temperature=0.0, seed=42, context_bars=48)
         meta = c.inference_metadata
-        assert meta["model"] == "qwen3:8b"
+        assert meta["model"] == "qwen3.5:9b"
         assert meta["temperature"] == 0.0
         assert meta["seed"] == 42
         assert meta["context_bars"] == 48

@@ -72,7 +72,7 @@ class LLMCandidate(Candidate):
 
     def __init__(
         self,
-        model: str = "qwen3:8b",
+        model: str = "qwen3.5:9b",
         base_url: str = "http://localhost:11434",
         context_bars: int = 48,
         timeout: float = 30.0,
