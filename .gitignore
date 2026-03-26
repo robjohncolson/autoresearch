@@ -18,3 +18,10 @@ AGENTS.md
 
 # Experimental code/artifacts
 dev/
+.gitnexus
+
+# Trading evaluation data and outputs
+data/
+experiments/
+artifacts/
+run.log

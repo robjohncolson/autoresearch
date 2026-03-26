@@ -15,6 +15,10 @@ dependencies = [
     "torch>=2.7.0",
 ]
 
+[project.optional-dependencies]
+trading = ["scikit-learn>=1.4"]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
 [tool.uv.sources]
 torch = [
     { index = "pytorch-xpu" },
