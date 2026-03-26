@@ -35,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--slippage-bps", type=float, default=5.0)
     parser.add_argument("--horizon", default="6h")
     parser.add_argument("--output-dir", type=str, default="experiments")
+    parser.add_argument("--include-llm", action="store_true", default=False,
+                        help="Include LLM candidate (requires Ollama running)")
     args = parser.parse_args(argv)
 
     config = EvalConfig(
@@ -54,6 +56,10 @@ def main(argv: list[str] | None = None) -> int:
         GBTBaselineCandidate(horizon=args.horizon),
     ]
 
+    if args.include_llm:
+        from trading_eval.baselines.llm_candidate import LLMCandidate
+        candidates.append(LLMCandidate())
+
     paths: list[Path] = []
     records: list[dict] = []
 
@@ -63,7 +69,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{'='*60}")
 
         result = run_experiment(candidate, config)
-        path = save_experiment(result, output_dir)
+        candidate_meta = getattr(candidate, "inference_metadata", None)
+        path = save_experiment(result, output_dir, candidate_metadata=candidate_meta)
         record = load_experiment(path)
 
         paths.append(path)

@@ -82,12 +82,26 @@ def _build_record(result: ExperimentResult) -> dict:
     }
 
 
-def save_experiment(result: ExperimentResult, output_dir: Path) -> Path:
-    """Save experiment result as a structured JSON record."""
+def save_experiment(
+    result: ExperimentResult,
+    output_dir: Path,
+    candidate_metadata: dict | None = None,
+) -> Path:
+    """Save experiment result as a structured JSON record.
+
+    Args:
+        result: The experiment result to save.
+        output_dir: Directory to save the JSON file.
+        candidate_metadata: Optional inference/model metadata from the candidate
+            (e.g., LLM model name, prompt version, temperature). Stored as
+            'candidate_metadata' in the record for reproducibility.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     record = _build_record(result)
+    if candidate_metadata:
+        record["candidate_metadata"] = candidate_metadata
     filename = f"{result.candidate_name}_{result.experiment_id}.json"
     path = output_dir / filename
 

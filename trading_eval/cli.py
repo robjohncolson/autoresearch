@@ -25,11 +25,16 @@ def _get_candidate(name: str):
     elif name == "gradient_boosted_tree":
         from trading_eval.baselines.sklearn_baseline import GBTBaselineCandidate
         return GBTBaselineCandidate()
+    elif name == "llm_qwen3":
+        from trading_eval.baselines.llm_candidate import LLMCandidate
+        return LLMCandidate()
     else:
         raise ValueError(f"Unknown candidate: {name!r}")
 
 
-CANDIDATE_NAMES = ["ta_ensemble", "logistic_regression", "gradient_boosted_tree"]
+CANDIDATE_NAMES = [
+    "ta_ensemble", "logistic_regression", "gradient_boosted_tree", "llm_qwen3",
+]
 
 
 def cmd_run(args) -> int:
@@ -54,8 +59,13 @@ def cmd_run(args) -> int:
 
     result = run_experiment(candidate, config)
 
+    # Extract candidate-specific metadata for reproducibility
+    candidate_meta = None
+    if hasattr(candidate, "inference_metadata"):
+        candidate_meta = candidate.inference_metadata
+
     output_dir = Path(args.output_dir)
-    path = save_experiment(result, output_dir)
+    path = save_experiment(result, output_dir, candidate_metadata=candidate_meta)
 
     m = result.aggregate_metrics
     print(f"Experiment {result.experiment_id} complete")
