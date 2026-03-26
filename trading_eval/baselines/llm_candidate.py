@@ -28,17 +28,11 @@ PROMPT_VERSION: Final[str] = "v1"
 DECISION_CADENCE: Final[int] = 6  # predict every 6 rows (= 6h with hourly candles)
 
 SYSTEM_PROMPT: Final[str] = """\
-You are a quantitative trading analyst. Given recent hourly OHLCV \
-candlestick data for a cryptocurrency pair, predict the price direction \
-over the next 6 hours.
-
-Respond ONLY with a JSON object containing exactly these fields:
-{
-  "direction": "long" or "short" or "abstain",
-  "confidence": float between 0.0 and 1.0,
-  "prob_up": float between 0.0 and 1.0 (probability price is higher in 6h),
-  "horizon_hours": 6
-}"""
+You are a cryptocurrency trading analyst. The user will give you \
+recent hourly price candles for a crypto pair. Analyze the price \
+action, momentum, and volatility to predict the most likely price \
+direction over the next 6 hours. You must respond with a JSON \
+prediction object and nothing else."""
 
 
 def _prompt_hash() -> str:
@@ -72,10 +66,10 @@ class LLMCandidate(Candidate):
 
     def __init__(
         self,
-        model: str = "qwen3.5:9b",
+        model: str = "qwen3:8b",
         base_url: str = "http://localhost:11434",
         context_bars: int = 48,
-        timeout: float = 30.0,
+        timeout: float = 120.0,
         temperature: float = 0.0,
         seed: int = 42,
         decision_cadence: int = DECISION_CADENCE,
@@ -86,6 +80,7 @@ class LLMCandidate(Candidate):
         self._timeout = timeout
         self._temperature = temperature
         self._seed = seed
+        self._num_predict = 100  # cap output tokens to prevent verbose generation
         self._decision_cadence = decision_cadence
         self._train_summary: dict | None = None
         self._train_tail: pd.DataFrame | None = None
@@ -231,9 +226,12 @@ class LLMCandidate(Candidate):
         user_msg = (
             f"Pair: DOGE/USD\n"
             f"{regime_text}\n"
-            f"Recent hourly candles up to the current decision point (newest last):\n"
+            f"Here are the most recent hourly price candles (newest last):\n"
             f"{ohlcv_table}\n\n"
-            f"Predict the direction for the next 6 hours from the last candle shown."
+            f"Based on the price action above, predict DOGE/USD direction "
+            f"for the next 6 hours. Respond with this exact JSON format:\n"
+            f'{{"direction":"long","confidence":0.75,"prob_up":0.75,"horizon_hours":6}}\n'
+            f"Use \"long\" if price will rise, \"short\" if fall, \"abstain\" if uncertain."
         )
 
         return SYSTEM_PROMPT, user_msg
@@ -251,6 +249,7 @@ class LLMCandidate(Candidate):
             "options": {
                 "temperature": self._temperature,
                 "seed": self._seed,
+                "num_predict": self._num_predict,
             },
         }
 
