@@ -31,6 +31,9 @@ override-dependencies = [
     "triton-xpu; sys_platform == 'linux'",
 ]
 
+[tool.pytest.ini_options]
+markers = ["parity: cross-repo parity tests requiring kraken-bot-v4"]
+
 [[tool.uv.index]]
 name = "pytorch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
